@@ -37,6 +37,13 @@ python -c "import torch; print(torch.__version__)"
 python -c "import torch; print(torch.version.cuda)"
 pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.1+cu118.html
 
+uv pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.8.0+cu128.html
+
+
+uv pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-2.8.0+cu128.html
+uv pip install torch-scatter -f https://data.pyg.org/whl/torch-2.0.1+cu118.html
+
+
 pip install peft
 pip install pandas
 pip install ogb

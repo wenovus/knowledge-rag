@@ -67,6 +67,8 @@ distribution = false
 [tool.uv.sources]
 deepsnap = { git = "https://github.com/snap-stanford/deepsnap.git" }
 
+[tool.uv.extra-build-dependencies]
+torch-scatter = ["torch"]
 
 [dependency-groups]
 dev = [
