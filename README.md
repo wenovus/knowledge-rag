@@ -40,9 +40,24 @@ pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -
 uv pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.8.0+cu128.html
 
 
-uv pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-2.8.0+cu128.html
-uv pip install torch-scatter -f https://data.pyg.org/whl/torch-2.0.1+cu118.html
 
+
+(knowledge-rag) (base) jupyter@fsed-gpu:~/knowledge-rag$ nvcc --version
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2022 NVIDIA Corporation
+Built on Wed_Sep_21_10:33:58_PDT_2022
+Cuda compilation tools, release 11.8, V11.8.89
+Build cuda_11.8.r11.8/compiler.31833905_0
+
+
+2.7.0+cu126
+
+
+
+uv pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-2.7.0+cu126.html
+uv pip install torch-scatter -f https://data.pyg.org/whl/torch-2.7.0+cu126.html
+
+uv add torch torch-scatter torch-sparse torch-cluster torch-geometric
 
 pip install peft
 pip install pandas
@@ -56,7 +71,44 @@ pip install pcst_fast
 pip install gensim
 pip install scipy==1.12
 pip install protobuf
+
+
+steps with UV:
+1. uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+2. uv add torch==2.8.0
+3. uv pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-2.8.0+cu126.html
+4. uv pip install torch_sparse -f https://pytorch-geometric.com/whl/torch-2.8.0+cu126.html
+
+uv pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.8.0+cu126.html
+
+steps with CONDA:
+
+conda create --name g_retriever python=3.12 -y
+conda activate g_retriever
+
+# https://pytorch.org/get-started/locally/
+-- conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
+-- conda install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu126
+
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.8.0+cu126.html
+
+pip install peft
+pip install pandas
+pip install ogb
+pip install transformers
+pip install wandb
+pip install sentencepiece
+pip install torch_geometric
+pip install datasets
+pip install pcst_fast
+pip install gensim
+pip install scipy==1.12
+pip install protobuf
+
+
 ```
+
 
 ## Download the Llama 2 Model
 1. Go to Hugging Face: https://huggingface.co/meta-llama/Llama-2-7b-hf. You will need to share your contact information with Meta to access this model.
@@ -93,6 +145,10 @@ Replace path to the llm checkpoints in the `src/model/__init__.py`, then run
 ### 1) Inference-Only LLM
 ```
 python inference.py --dataset scene_graphs --model_name inference_llm --llm_model_name 7b_chat
+
+python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name 7b_chat
+
+
 ```
 ### 2) Frozen LLM + Prompt Tuning
 ```
