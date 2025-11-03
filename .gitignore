@@ -74,3 +74,6 @@ wandb/
 .ipynb_checkpoints
 
 .env
+
+# vim
+*.swp
