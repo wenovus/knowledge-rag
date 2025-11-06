@@ -5,7 +5,6 @@ from torch.utils.data import Dataset
 import datasets
 from tqdm import tqdm
 from src.dataset.utils.retrieval import retrieval_via_pcst
-from src.dataset.webqsp_sample import sample_dataset
 
 model_name = 'sbert'
 path = 'dataset/webqsp'
@@ -24,8 +23,7 @@ class WebQSPDataset(Dataset):
         self.graph = None
         self.graph_type = 'Knowledge Graph'
         dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
-        dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset)
-        self.dataset = dataset
+        self.dataset = datasets.concatenate_datasets([dataset['train'], dataset['validation'], dataset['test']])
         self.q_embs = torch.load(f'{path}/q_embs.pt')
 
     def __len__(self):
