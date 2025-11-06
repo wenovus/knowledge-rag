@@ -4,6 +4,7 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset
 from src.dataset.utils.retrieval import retrieval_via_pcst
+from src.dataset.utils.k_hop import retrieval_via_k_hop
 
 
 model_name = 'sbert'
@@ -22,16 +23,18 @@ class SceneGraphsDataset(Dataset):
         self.prompt = None
         self.graph = None
         self.graph_type = 'Scene Graph'
-        self.questions = pd.read_csv(f'{path}/questions.csv')
+        self.questions = pd.read_csv(f'{path}/questions_sample.csv')
 
     def __len__(self):
         """Return the len of the dataset."""
         return len(self.questions)
 
     def __getitem__(self, index):
+        print(f"index: {index}")
+        print(f"self.questions: {self.questions}")
         data = self.questions.iloc[index]
         question = f'Question: {data["question"]}\n\nAnswer:'
-        graph = torch.load(f'{cached_graph}/{index}.pt')
+        graph = torch.load(f'{cached_graph}/{index}.pt', weights_only=False)
         desc = open(f'{cached_desc}/{index}.txt', 'r').read()
 
         return {
@@ -61,13 +64,13 @@ def preprocess():
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
 
-    questions = pd.read_csv(f'{path}/questions.csv')
+    questions = pd.read_csv(f'{path}/questions_sample.csv')
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(questions))):
         if os.path.exists(f'{cached_graph}/{index}.pt'):
             continue
         image_id = questions.iloc[index]['image_id']
-        graph = torch.load(f'{path_graphs}/{image_id}.pt')
+        graph = torch.load(f'{path_graphs}/{image_id}.pt', weights_only=False)
         nodes = pd.read_csv(f'{path_nodes}/{image_id}.csv')
         edges = pd.read_csv(f'{path_edges}/{image_id}.csv')
         subg, desc = retrieval_via_pcst(graph, q_embs[index], nodes, edges, topk=3, topk_e=3, cost_e=0.5)

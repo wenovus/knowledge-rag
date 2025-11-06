@@ -55,8 +55,6 @@ def step_one(max_graphs):
         count += 1
         if count >= max_graphs:
             break
-        
-
     print(f"image_ids: {image_ids}")
     print(f"len of image_ids: {len(image_ids)}")
     return image_ids
@@ -66,10 +64,14 @@ def step_two(image_ids):
     def _encode_questions():
         q_embs = text2embedding(model, tokenizer, device, df.question.tolist())
         torch.save(q_embs, f'{path}/q_embs.pt')
-        print(f"q_embs: {q_embs}")
+        #print(f"q_embs: {q_embs}")
 
     def _encode_graphs():
+        print(f"len df: {len(df)}")
         image_ids = df.image_id.unique()
+        print(f"image_ids to encode: {image_ids}")
+        print(f"len image_ids : {len(image_ids)}")
+        
         for i in tqdm(image_ids):
             nodes = pd.read_csv(f'{path_nodes}/{i}.csv')
             edges = pd.read_csv(f'{path_edges}/{i}.csv')
@@ -82,11 +84,11 @@ def step_two(image_ids):
             pyg_graph = Data(x=node_attr, edge_index=edge_index, edge_attr=edge_attr, num_nodes=len(nodes))
             torch.save(pyg_graph, f'{path_graphs}/{i}.pt')
 
-    df = pd.read_csv(f'{path}/questions.csv')
-    print(f"df: {df}")
-    df = df[df['image_id'].isin(image_ids)]
-    print(f"df filtered: {df}")
-    df.to_csv(f'{path}/questions_sample.csv', index=True)
+    df_questions = pd.read_csv(f'{path}/questions.csv')
+    print(f"df questions: {len(df_questions)}")
+    df = df_questions[df_questions['image_id'].isin(image_ids)]
+    print(f"len df questions filtered: {len(df)}")
+    df.to_csv(f'{path}/questions_sample.csv', index=False)
     os.makedirs(path_graphs, exist_ok=True)
     model, tokenizer, device = load_model[model_name]()
     text2embedding = load_text2embedding[model_name]
@@ -96,15 +98,16 @@ def step_two(image_ids):
     return df
 
 
-def generate_split(df_questions):
+def generate_split():
 
     # Load the data
-    #path = "dataset/scene_graphs"
-    #questions = pd.read_csv(f"{path}/questions.csv")
-    questions =df_questions
+    path = "dataset/scene_graphs"
+    questions = pd.read_csv(f"{path}/questions_sample.csv")
+    print(f"len questions : {len(questions)}")
 
     # Create a unique list of image IDs
     unique_image_ids = questions['image_id'].unique()
+    print(f"len unique_image_ids : {len(unique_image_ids)}")
 
     # Shuffle the image IDs
     np.random.seed(42)  # For reproducibility
@@ -119,8 +122,12 @@ def generate_split(df_questions):
     id_to_set.update({image_id: 'val' for image_id in val_ids})
     id_to_set.update({image_id: 'test' for image_id in test_ids})
 
+    print(f"id_to_set: {id_to_set}")
+
     # Map the sets back to the original DataFrame
     questions['set'] = questions['image_id'].map(id_to_set)
+
+    print(f"{questions.head(5).to_string()}")
 
     # Create the final train, validation, and test DataFrames
     train_df = questions[questions['set'] == 'train']
@@ -139,5 +146,5 @@ def generate_split(df_questions):
 if __name__ == '__main__':
     max_graphs = 100
     image_ids = step_one(max_graphs)
-    df_questions = step_two(image_ids)
-    generate_split(df_questions)
+    step_two(image_ids)
+    generate_split()

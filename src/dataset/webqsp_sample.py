@@ -5,7 +5,6 @@ from torch.utils.data import Dataset
 import datasets
 from tqdm import tqdm
 from src.dataset.utils.retrieval import retrieval_via_pcst
-from src.dataset.webqsp_sample import sample_dataset
 
 model_name = 'sbert'
 path = 'dataset/webqsp'
@@ -35,7 +34,7 @@ class WebQSPDataset(Dataset):
     def __getitem__(self, index):
         data = self.dataset[index]
         question = f'Question: {data["question"]}\nAnswer: '
-        graph = torch.load(f'{cached_graph}/{index}.pt')
+        graph = torch.load(f'{cached_graph}/{index}.pt', weights_only=False)
         desc = open(f'{cached_desc}/{index}.txt', 'r').read()
         label = ('|').join(data['answer']).lower()
 
@@ -64,7 +63,7 @@ def preprocess():
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
-    dataset = datasets.concatenate_datasets([dataset['train'], dataset['validation'], dataset['test']])
+    dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset)
 
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(dataset))):
@@ -76,12 +75,21 @@ def preprocess():
         if len(nodes) == 0:
             print(f'Empty graph at index {index}')
             continue
-        graph = torch.load(f'{path_graphs}/{index}.pt')
+        graph = torch.load(f'{path_graphs}/{index}.pt', weights_only=False)
         q_emb = q_embs[index]
         subg, desc = retrieval_via_pcst(graph, q_emb, nodes, edges, topk=3, topk_e=5, cost_e=0.5)
         torch.save(subg, f'{cached_graph}/{index}.pt')
         open(f'{cached_desc}/{index}.txt', 'w').write(desc)
 
+def sample_dataset(dataset):
+    train_sample = dataset['train'].select(range(min(1, len(dataset['train']))))
+    val_sample = dataset['validation'].select(range(min(1, len(dataset['validation']))))
+    test_sample = dataset['test'].select(range(min(1, len(dataset['test']))))
+    len_train = len(train_sample)
+    len_val = len(val_sample)
+    len_test = len(test_sample)
+    dataset = datasets.concatenate_datasets([train_sample, val_sample, test_sample])
+    return dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample
 
 if __name__ == '__main__':
 
