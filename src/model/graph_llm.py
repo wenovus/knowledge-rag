@@ -126,8 +126,10 @@ class GraphLLM(torch.nn.Module):
         # encode special tokens
         eos_tokens = self.tokenizer(EOS, add_special_tokens=False)
         eos_user_tokens = self.tokenizer(EOS_USER, add_special_tokens=False)
-        bos_embeds = self.word_embedding(self.tokenizer(BOS, add_special_tokens=False, return_tensors='pt').input_ids[0])
-        pad_embeds = self.word_embedding(torch.tensor(self.tokenizer.pad_token_id)).unsqueeze(0)
+        bos_token_ids = self.tokenizer(BOS, add_special_tokens=False, return_tensors='pt').input_ids[0].to(self.model.device)
+        bos_embeds = self.word_embedding(bos_token_ids)
+        pad_token_id = torch.tensor(self.tokenizer.pad_token_id).to(self.model.device)
+        pad_embeds = self.word_embedding(pad_token_id).unsqueeze(0)
 
         # encode graphs
         graph_embeds = self.encode_graphs(samples)
@@ -179,8 +181,10 @@ class GraphLLM(torch.nn.Module):
 
         # encode special tokens
         eos_user_tokens = self.tokenizer(EOS_USER, add_special_tokens=False)
-        bos_embeds = self.word_embedding(self.tokenizer(BOS, add_special_tokens=False, return_tensors='pt').input_ids[0])
-        pad_embeds = self.word_embedding(torch.tensor(self.tokenizer.pad_token_id)).unsqueeze(0)
+        bos_token_ids = self.tokenizer(BOS, add_special_tokens=False, return_tensors='pt').input_ids[0].to(self.model.device)
+        bos_embeds = self.word_embedding(bos_token_ids)
+        pad_token_id = torch.tensor(self.tokenizer.pad_token_id).to(self.model.device)
+        pad_embeds = self.word_embedding(pad_token_id).unsqueeze(0)
 
         # encode graphs
         graph_embeds = self.encode_graphs(samples)
