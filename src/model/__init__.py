@@ -12,6 +12,7 @@ load_model = {
 
 # Replace the following with the model paths
 llama_model_path = {
+    "1b": "meta-llama/Llama-3.2-1B",
     "7b": "meta-llama/Llama-2-7b-hf",
     "7b_chat": "meta-llama/Llama-2-7b-chat-hf",
     "13b": "meta-llama/Llama-2-13b-hf",
