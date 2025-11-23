@@ -170,3 +170,10 @@ python train.py --dataset scene_graphs --model_name graph_llm --llm_frozen False
 
 ## Reproducibility
 Use `run.sh` to run the codes and reproduce the published results in the main table.
+
+
+## Retrieval graphs implementation: scene graphs 
+
+python -m src.dataset.preprocess.scene_graphs_sample
+
+python -m src.dataset.scene_graphs_sample
