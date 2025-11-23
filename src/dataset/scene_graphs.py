@@ -20,7 +20,7 @@ cached_desc = f'{path}/cached_desc'
 class SceneGraphsDataset(Dataset):
     def __init__(self):
         super().__init__()
-        self.prompt = 'Please answer the given question.'
+        self.prompt = None
         self.graph = None
         self.graph_type = 'Scene Graph'
         self.questions = pd.read_csv(f'{path}/questions.csv')
