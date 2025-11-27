@@ -29,3 +29,9 @@ python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False
 python train.py --dataset scene_graphs --model_name graph_llm --llm_frozen False 
 python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  
 
+
+# GraphSAGE
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False  --gnn_model_name graphsage 
+
+# Gemma
+python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name gemma_7b_chat --max_txt_len 0  
