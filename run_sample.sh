@@ -84,5 +84,10 @@ python inference.py --dataset webqsp --model_name inference_llm --llm_model_name
 python train.py --dataset webqsp --model_name pt_llm  
 ### b) g-retriever
 python train.py --dataset webqsp --model_name graph_llm  
+
+## 3) tuned llm: Fine-tunning the LLM with LoRA
+### a) finetuning with lora
+python train.py --dataset webqsp --model_name llm --llm_frozen False  
 ### b) g-retriever + finetuning with lora
-python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False 
+
