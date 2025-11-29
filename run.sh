@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 for seed in 0 1 2 3 
 do
 # 1) inference only
