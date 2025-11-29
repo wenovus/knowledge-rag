@@ -75,6 +75,9 @@ wandb/
 
 .env
 
+# vim
+*.swp
+
 .DS_Store
 
 # datasets
