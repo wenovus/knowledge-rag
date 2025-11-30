@@ -140,6 +140,8 @@ def parse_args():
         default=0,
         help="Random seed for numpy sampling.",
     )
+    print(f"taking {args.sample_size} samples from each split")
+    print(f"using seed {args.seed}")
     return parser.parse_args()
 
 

@@ -119,6 +119,8 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
+    print(f"taking {args.sample_size} samples from each split")
+    print(f"using seed {args.seed}")
     preprocess(args.sample_size, args.seed)
 
     dataset = WebQSPDataset(args.sample_size, args.seed)
