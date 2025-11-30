@@ -1,6 +1,7 @@
 import os
 import torch
 import pandas as pd
+import numpy as np
 from torch.utils.data import Dataset
 import datasets
 from tqdm import tqdm
@@ -17,13 +18,13 @@ cached_desc = f'{path}/cached_desc'
 
 
 class WebQSPDataset(Dataset):
-    def __init__(self):
+    def __init__(self, sample_size: int, seed: int):
         super().__init__()
         self.prompt = 'Please answer the given question.'
         self.graph = None
         self.graph_type = 'Knowledge Graph'
         dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
-        dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset)
+        dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset, sample_size, seed)
         self.dataset = dataset
         self.q_embs = torch.load(f'{path}/q_embs.pt')
 
@@ -59,11 +60,11 @@ class WebQSPDataset(Dataset):
         return {'train': train_indices, 'val': val_indices, 'test': test_indices}
 
 
-def preprocess():
+def preprocess(sample_size: int, seed: int):
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
-    dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset)
+    dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset, sample_size, seed)
 
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(dataset))):
@@ -81,10 +82,19 @@ def preprocess():
         torch.save(subg, f'{cached_graph}/{index}.pt')
         open(f'{cached_desc}/{index}.txt', 'w').write(desc)
 
-def sample_dataset(dataset):
-    train_sample = dataset['train'].select(range(min(1, len(dataset['train']))))
-    val_sample = dataset['validation'].select(range(min(1, len(dataset['validation']))))
-    test_sample = dataset['test'].select(range(min(1, len(dataset['test']))))
+def sample_dataset(dataset, sample_size: int, seed: int):
+    np.random.seed(seed)
+    train_size = min(sample_size, len(dataset['train']))
+    val_size = min(sample_size, len(dataset['validation']))
+    test_size = min(sample_size, len(dataset['test']))
+
+    train_indices = np.random.choice(len(dataset['train']), size=train_size, replace=False)
+    val_indices = np.random.choice(len(dataset['validation']), size=val_size, replace=False)
+    test_indices = np.random.choice(len(dataset['test']), size=test_size, replace=False)
+
+    train_sample = dataset['train'].select(train_indices)
+    val_sample = dataset['validation'].select(val_indices)
+    test_sample = dataset['test'].select(test_indices)
     len_train = len(train_sample)
     len_val = len(val_sample)
     len_test = len(test_sample)
@@ -92,10 +102,26 @@ def sample_dataset(dataset):
     return dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample
 
 if __name__ == '__main__':
+    import argparse
 
-    preprocess()
+    parser = argparse.ArgumentParser(description="Sample WebQSP dataset for training/inference.")
+    parser.add_argument(
+        "--sample_size",
+        type=int,
+        default=50,
+        help="Number of examples to sample from each split (train/val/test). Must match preprocessing script.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Random seed for numpy sampling. Must match preprocessing script.",
+    )
+    args = parser.parse_args()
 
-    dataset = WebQSPDataset()
+    preprocess(args.sample_size, args.seed)
+
+    dataset = WebQSPDataset(args.sample_size, args.seed)
 
     data = dataset[1]
     for k, v in data.items():

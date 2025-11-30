@@ -131,7 +131,7 @@ def parse_args():
     parser.add_argument(
         "--sample_size",
         type=int,
-        default=10,
+        default=50,
         help="Number of examples to sample from each split (train/val/test).",
     )
     parser.add_argument(
