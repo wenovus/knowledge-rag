@@ -21,8 +21,11 @@ python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False
 ## GNN Architectures
 ### GraphSAGE
 python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False  --gnn_model_name graphsage
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  --gnn_model_name graphsage
+
 ### GIN
 python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False  --gnn_model_name gin
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  --gnn_model_name gin
 
 ## LLM model comparisons
 ### Gemma
