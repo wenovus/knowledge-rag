@@ -97,4 +97,8 @@ python inference.py --dataset expla_graphs --model_name inference_llm --llm_mode
 python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False --llm_model_name deepseek6_7b
 python train.py --dataset webqsp --model_name graph_llm --llm_frozen False --llm_model_name deepseek6_7b
 
+### LLM Prompt Templates
+
+## frozen llm + prompt tuning: Keeping the parameters of the LLM frozen and adapting only the prompt.
+python train.py --dataset webqsp --model_name pt_llm  
 
