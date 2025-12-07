@@ -28,7 +28,6 @@ def parse_args_llama():
 
     # LLM related
     parser.add_argument("--llm_model_name", type=str, default='7b')
-    #parser.add_argument("--llm_model_name", type=str, default='1b')
     parser.add_argument("--llm_model_path", type=str, default='')
     parser.add_argument("--llm_frozen", type=str, default='True')
     parser.add_argument("--llm_num_virtual_tokens", type=int, default=10)
