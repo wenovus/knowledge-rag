@@ -55,9 +55,7 @@ python train.py --dataset webqsp --model_name graph_llm
 ## 3) tuned llm: Fine-tunning the LLM with LoRA
 ### a) finetuning with lora
 python train.py --dataset webqsp_baseline --model_name llm --llm_frozen False  
-### b) g-retriever
-python train.py --dataset webqsp --model_name graph_llm  
-### c) g-retriever + finetuning with lora
+### b) g-retriever + finetuning with lora
 python train.py --dataset webqsp --model_name graph_llm --llm_frozen False 
 
 
