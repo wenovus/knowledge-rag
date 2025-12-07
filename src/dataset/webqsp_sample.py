@@ -59,21 +59,15 @@ class WebQSPDataset(Dataset):
         return {'train': train_indices, 'val': val_indices, 'test': test_indices}
 
 
-def preprocess(sample_size: int, seed: int, retrieval_method: str):
+def preprocess(sample_size: int, seed: int, retrieval_method: str, tele_mode: str = None, pcst: bool = False):
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
     dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset, sample_size, seed)
 
-    # Import the appropriate retrieval function based on method
-    if retrieval_method == 'pcst':
-        from src.dataset.utils.retrieval import retrieval_via_pcst as retrieval_func
-    elif retrieval_method == 'k_hop':
-        from src.dataset.utils.k_hop import retrieval_via_k_hop as retrieval_func
-    elif retrieval_method == 'ppr':
-        from src.dataset.utils.personalized_pagerank import retrieval_via_pagerank as retrieval_func
-    else:
-        raise ValueError(f"Unknown retrieval method: {retrieval_method}. Must be one of: 'pcst', 'k_hop', 'ppr'")
+    # Get the appropriate retrieval function
+    from src.dataset.utils.retrieval_func_selector import get_retrieval_func
+    retrieval_func = get_retrieval_func(retrieval_method, tele_mode, pcst)
 
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(dataset))):
@@ -133,12 +127,27 @@ if __name__ == '__main__':
         choices=["pcst", "k_hop", "ppr"],
         help="Retrieval method to use for subgraph extraction. Options: 'pcst', 'k_hop', 'ppr'.",
     )
+    parser.add_argument(
+        "--tele_mode",
+        type=str,
+        default=None,
+        choices=["proportional", "top_k_linear", "top_k_equal", "top_k_exponential"],
+        help="Teleport mode for PPR retrieval. Only used when retrieval_method='ppr'. Options: 'proportional', 'top_k_linear', 'top_k_equal', 'top_k_exponential'.",
+    )
+    parser.add_argument(
+        "--pcst",
+        action="store_true",
+        help="Use PCST mode for PPR retrieval. Only used when retrieval_method='ppr'.",
+    )
     args = parser.parse_args()
 
     print(f"taking {args.sample_size} samples from each split")
     print(f"using seed {args.seed}")
     print(f"using retrieval method: {args.retrieval_method}")
-    preprocess(args.sample_size, args.seed, args.retrieval_method)
+    if args.retrieval_method == 'ppr':
+        print(f"using tele_mode: {args.tele_mode}")
+        print(f"using pcst: {args.pcst}")
+    preprocess(args.sample_size, args.seed, args.retrieval_method, args.tele_mode, args.pcst)
 
     dataset = WebQSPDataset(args.sample_size, args.seed)
 
