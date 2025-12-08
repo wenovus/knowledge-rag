@@ -2,23 +2,16 @@ import torch
 import numpy as np
 from torch_geometric.data.data import Data
 import functools
-from enum import Enum
 from .retrieval import run_pcst
+from .retrieval_func_selector import TeleportMode, PrizeAllocation
 
 
-class TeleportMode(Enum):
-    PROPORTIONAL = "proportional"
-    TOP_K_LINEAR = "top_k_linear"
-    TOP_K_EQUAL = "top_k_equal"
-    TOP_K_EXPONENTIAL = "top_k_exponential"
-
-
-def retrieval_via_pagerank_fn(pcst, tele_mode):
-    return functools.partial(retrieval_via_pagerank, pcst=pcst, tele_mode=tele_mode)
+def retrieval_via_pagerank_fn(pcst, tele_mode, prize_allocation=None):
+    return functools.partial(retrieval_via_pagerank, pcst=pcst, tele_mode=tele_mode, prize_allocation=prize_allocation)
 
 
 
-def retrieval_via_pagerank(graph, q_emb, textual_nodes, textual_edges, topk=3, topk_e=3, cost_e=0.5, alpha=0.85, max_iter=50, tol=1e-6, pcst=False, tele_mode=TeleportMode.PROPORTIONAL):
+def retrieval_via_pagerank(graph, q_emb, textual_nodes, textual_edges, pcst, tele_mode, prize_allocation, topk=3, topk_e=3, cost_e=0.5, alpha=0.85, max_iter=50, tol=1e-6):
     """
     Personalized PageRank-based retrieval with the same interface as retrieval_via_pcst.
 
@@ -33,6 +26,11 @@ def retrieval_via_pagerank(graph, q_emb, textual_nodes, textual_edges, topk=3, t
         alpha: Damping factor for PageRank (default: 0.85)
         max_iter: Maximum number of PageRank iterations (default: 50)
         tol: Convergence tolerance for PageRank (default: 1e-6)
+        pcst: Whether to use PCST mode (required, no default)
+        tele_mode: Teleport mode for PageRank (required, no default). Must be TeleportMode enum.
+        prize_allocation: Prize allocation mode (required, no default). Must be PrizeAllocation enum or None.
+                         None is only allowed when tele_mode=PROPORTIONAL and pcst=False.
+                         When tele_mode=TOP_K or pcst=True, defaults to LINEAR if None.
 
     Returns:
         data: Subgraph as PyTorch Geometric Data object
@@ -66,29 +64,30 @@ def retrieval_via_pagerank(graph, q_emb, textual_nodes, textual_edges, topk=3, t
     if tele_mode == TeleportMode.PROPORTIONAL:
         # Normalize to create personalization vector (must sum to 1)
         personalization = torch.softmax(node_similarities, dim=0)
-    else:
-        # For TOP_K modes, use the pre-computed top-k similarity nodes
+    elif tele_mode == TeleportMode.TOP_K:
+        # For TOP_K mode, use the pre-computed top-k similarity nodes
         if topk_similarity_indices is None:
             raise ValueError(f"topk must be > 0 when using tele_mode={tele_mode}, but got topk={topk}")
 
         topk_indices = topk_similarity_indices
         topk_for_tele = topk_indices.size(0)
 
-        if tele_mode == TeleportMode.TOP_K_LINEAR:
+        # Use prize_allocation to determine weights
+        if prize_allocation == PrizeAllocation.LINEAR:
             # Linearly-proportional weights based on similarity ranking
             # Rank 1 (highest similarity) gets weight k, rank k gets weight 1
             weights = torch.arange(topk_for_tele, 0, -1, dtype=torch.float32, device=device)
-        elif tele_mode == TeleportMode.TOP_K_EQUAL:
+        elif prize_allocation == PrizeAllocation.EQUAL:
             # Equal weighting for all top-k nodes
             weights = torch.ones(topk_for_tele, dtype=torch.float32, device=device)
-        elif tele_mode == TeleportMode.TOP_K_EXPONENTIAL:
+        elif prize_allocation == PrizeAllocation.EXPONENTIAL:
             # Exponentially-decaying weights based on similarity ranking
             # Rank 1 gets highest weight, exponentially decreasing
             # Using exp(-0.5 * rank) where rank 0 (best) gets weight 1.0
             ranks = torch.arange(topk_for_tele, dtype=torch.float32, device=device)
             weights = torch.exp(-0.5 * ranks)
         else:
-            raise ValueError(f"Unknown tele_mode: {tele_mode}. Must be one of {[mode.value for mode in TeleportMode]}")
+            raise ValueError(f"Unknown prize_allocation: {prize_allocation}. Must be one of {[mode.value for mode in PrizeAllocation]}")
 
         # Assign weights to top-k nodes
         personalization[topk_indices] = weights
@@ -99,6 +98,8 @@ def retrieval_via_pagerank(graph, q_emb, textual_nodes, textual_edges, topk=3, t
             personalization = personalization / personalization_sum
         else:
             raise ValueError(f"Personalization vector sums to zero for tele_mode={tele_mode}. This should not happen.")
+    else:
+        raise ValueError(f"Unknown tele_mode: {tele_mode}. Must be one of {[mode.value for mode in TeleportMode]}")
 
     # Build adjacency matrix from edge_index
     edge_index = graph.edge_index
@@ -156,13 +157,32 @@ def retrieval_via_pagerank(graph, q_emb, textual_nodes, textual_edges, topk=3, t
         # Union the two sets of nodes
         prize_nodes = np.unique(np.concatenate([topk_pagerank_nodes, topk_similarity_nodes]))
 
-        # Set up node prizes: assign linearly decreasing weights based on ranking in prize_nodes
+        # Set up node prizes: assign weights based on prize_allocation
         n_prizes = torch.zeros(num_nodes, device=device)
         if len(prize_nodes) > 0:
-            # Assign prizes based on the order in prize_nodes
-            # XXX(wenovus): Consider modifying how prizes are assigned to the top-k nodes.
-            prize_values = torch.arange(len(prize_nodes), 0, -1, dtype=torch.float32, device=device)
-            n_prizes[torch.from_numpy(prize_nodes).to(device)] = prize_values
+            # Get the similarity scores for prize nodes to determine ranking
+            prize_nodes_tensor = torch.from_numpy(prize_nodes).to(device)
+            prize_similarities = node_similarities[prize_nodes_tensor]
+            # Sort by similarity (descending) to get ranking
+            _, sorted_indices = torch.sort(prize_similarities, descending=True)
+            
+            # Assign prizes based on prize_allocation
+            if prize_allocation == PrizeAllocation.LINEAR:
+                # Linearly-proportional weights: rank 1 gets weight k, rank k gets weight 1
+                prize_values = torch.arange(len(prize_nodes), 0, -1, dtype=torch.float32, device=device)
+            elif prize_allocation == PrizeAllocation.EQUAL:
+                # Equal weighting for all prize nodes
+                prize_values = torch.ones(len(prize_nodes), dtype=torch.float32, device=device)
+            elif prize_allocation == PrizeAllocation.EXPONENTIAL:
+                # Exponentially-decaying weights
+                ranks = torch.arange(len(prize_nodes), dtype=torch.float32, device=device)
+                prize_values = torch.exp(-0.5 * ranks)
+            else:
+                raise ValueError(f"Unknown prize_allocation: {prize_allocation}. Must be one of {[mode.value for mode in PrizeAllocation]}")
+            
+            # Reorder prize_values according to similarity ranking
+            prize_values_sorted = prize_values[sorted_indices]
+            n_prizes[prize_nodes_tensor] = prize_values_sorted
 
         # Run PCST
         selected_nodes, selected_edges = run_pcst(graph, n_prizes, q_emb, topk_e, cost_e)

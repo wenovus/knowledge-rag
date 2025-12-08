@@ -2,6 +2,8 @@ import torch
 import numpy as np
 from pcst_fast import pcst_fast
 from torch_geometric.data.data import Data
+import functools
+from .retrieval_func_selector import PrizeAllocation
 
 
 def run_pcst(graph, n_prizes, q_emb, topk_e=3, cost_e=0.5):
@@ -88,22 +90,77 @@ def run_pcst(graph, n_prizes, q_emb, topk_e=3, cost_e=0.5):
     return selected_nodes, selected_edges
 
 
-def retrieval_via_pcst(graph, q_emb, textual_nodes, textual_edges, topk=3, topk_e=3, cost_e=0.5):
+def _allocate_prizes(node_similarities, topk_indices, prize_allocation, device):
+    """
+    Allocate prizes to top-k nodes based on prize_allocation mode.
+    
+    Args:
+        node_similarities: Tensor of node similarities (shape: [num_nodes])
+        topk_indices: Tensor of top-k node indices
+        prize_allocation: PrizeAllocation enum value
+        device: Device to create tensors on
+    
+    Returns:
+        n_prizes: Tensor of node prizes (shape: [num_nodes])
+    """
+    num_nodes = node_similarities.size(0)
+    topk_for_prize = topk_indices.size(0)
+    n_prizes = torch.zeros(num_nodes, device=device)
+    
+    if prize_allocation == PrizeAllocation.LINEAR:
+        # Linearly-proportional weights: rank 1 gets weight k, rank k gets weight 1
+        prize_values = torch.arange(topk_for_prize, 0, -1, dtype=torch.float32, device=device)
+    elif prize_allocation == PrizeAllocation.EQUAL:
+        # Equal weighting for all top-k nodes
+        prize_values = torch.ones(topk_for_prize, dtype=torch.float32, device=device)
+    elif prize_allocation == PrizeAllocation.EXPONENTIAL:
+        # Exponentially-decaying weights
+        ranks = torch.arange(topk_for_prize, dtype=torch.float32, device=device)
+        prize_values = torch.exp(-0.5 * ranks)
+    else:
+        raise ValueError(f"Unknown prize_allocation: {prize_allocation}. Must be one of {[mode.value for mode in PrizeAllocation]}")
+    
+    n_prizes[topk_indices] = prize_values
+    return n_prizes
+
+
+def retrieval_via_pcst_fn(prize_allocation):
+    return functools.partial(retrieval_via_pcst, prize_allocation=prize_allocation)
+
+
+def retrieval_via_pcst(graph, q_emb, textual_nodes, textual_edges, prize_allocation, topk=3, topk_e=3, cost_e=0.5):
+    """
+    PCST-based retrieval for subgraph extraction.
+
+    Args:
+        graph: PyTorch Geometric Data object
+        q_emb: Query embedding tensor
+        textual_nodes: DataFrame with node attributes
+        textual_edges: DataFrame with edge attributes
+        topk: Number of top nodes to select based on similarity
+        topk_e: Number of top edges to consider
+        cost_e: Edge cost parameter
+        prize_allocation: Prize allocation mode (required, no default). Must be PrizeAllocation enum.
+
+    Returns:
+        data: Subgraph as PyTorch Geometric Data object
+        desc: Description string with node and edge information
+    """
     if len(textual_nodes) == 0 or len(textual_edges) == 0:
         desc = textual_nodes.to_csv(index=False) + '\n' + textual_edges.to_csv(index=False, columns=['src', 'edge_attr', 'dst'])
         graph = Data(x=graph.x, edge_index=graph.edge_index, edge_attr=graph.edge_attr, num_nodes=graph.num_nodes)
         return graph, desc
 
     # Set up node prizes
+    device = graph.x.device
+    node_similarities = torch.nn.CosineSimilarity(dim=-1)(q_emb, graph.x)
+    
     if topk > 0:
-        n_prizes = torch.nn.CosineSimilarity(dim=-1)(q_emb, graph.x)
-        topk = min(topk, graph.num_nodes)
-        _, topk_n_indices = torch.topk(n_prizes, topk, largest=True)
-
-        n_prizes = torch.zeros_like(n_prizes)
-        n_prizes[topk_n_indices] = torch.arange(topk, 0, -1).float()
+        topk_clamped = min(topk, graph.num_nodes)
+        _, topk_n_indices = torch.topk(node_similarities, topk_clamped, largest=True)
+        n_prizes = _allocate_prizes(node_similarities, topk_n_indices, prize_allocation, device)
     else:
-        n_prizes = torch.zeros(graph.num_nodes)
+        n_prizes = torch.zeros(graph.num_nodes, device=device)
 
     # Run PCST
     selected_nodes, selected_edges = run_pcst(graph, n_prizes, q_emb, topk_e, cost_e)

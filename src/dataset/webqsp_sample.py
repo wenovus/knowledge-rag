@@ -59,7 +59,7 @@ class WebQSPDataset(Dataset):
         return {'train': train_indices, 'val': val_indices, 'test': test_indices}
 
 
-def preprocess(sample_size: int, seed: int, retrieval_method: str, tele_mode: str = None, pcst: bool = False):
+def preprocess(sample_size: int, seed: int, retrieval_method: str, tele_mode: str = None, pcst: bool = False, prize_allocation: str = None):
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
@@ -67,7 +67,7 @@ def preprocess(sample_size: int, seed: int, retrieval_method: str, tele_mode: st
 
     # Get the appropriate retrieval function
     from src.dataset.utils.retrieval_func_selector import get_retrieval_func
-    retrieval_func = get_retrieval_func(retrieval_method, tele_mode, pcst)
+    retrieval_func = get_retrieval_func(retrieval_method, tele_mode, pcst, prize_allocation)
 
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(dataset))):
@@ -131,13 +131,20 @@ if __name__ == '__main__':
         "--tele_mode",
         type=str,
         default=None,
-        choices=["proportional", "top_k_linear", "top_k_equal", "top_k_exponential"],
-        help="Teleport mode for PPR retrieval. Only used when retrieval_method='ppr'. Options: 'proportional', 'top_k_linear', 'top_k_equal', 'top_k_exponential'.",
+        choices=["proportional", "top_k"],
+        help="Teleport mode for PPR retrieval. Only used when retrieval_method='ppr'. Options: 'proportional', 'top_k'.",
     )
     parser.add_argument(
         "--pcst",
         action="store_true",
         help="Use PCST mode for PPR retrieval. Only used when retrieval_method='ppr'.",
+    )
+    parser.add_argument(
+        "--prize_allocation",
+        type=str,
+        default=None,
+        choices=["linear", "equal", "exponential"],
+        help="Prize allocation mode. Used when retrieval_method='pcst' or when retrieval_method='ppr' with tele_mode='top_k' or when retrieval_method='ppr' with pcst=True. Options: 'linear', 'equal', 'exponential'. Defaults to 'linear' if not specified.",
     )
     args = parser.parse_args()
 
@@ -147,7 +154,9 @@ if __name__ == '__main__':
     if args.retrieval_method == 'ppr':
         print(f"using tele_mode: {args.tele_mode}")
         print(f"using pcst: {args.pcst}")
-    preprocess(args.sample_size, args.seed, args.retrieval_method, args.tele_mode, args.pcst)
+    if args.retrieval_method == 'pcst' or (args.retrieval_method == 'ppr' and (args.tele_mode == 'top_k' or args.pcst)):
+        print(f"using prize_allocation: {args.prize_allocation or 'linear (default)'}")
+    preprocess(args.sample_size, args.seed, args.retrieval_method, args.tele_mode, args.pcst, args.prize_allocation)
 
     dataset = WebQSPDataset(args.sample_size, args.seed)
 

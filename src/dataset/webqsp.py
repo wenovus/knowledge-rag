@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import datasets
 from tqdm import tqdm
 from src.dataset.utils.retrieval import retrieval_via_pcst
+from src.dataset.utils.retrieval_func_selector import PrizeAllocation
 from src.dataset.utils.personalized_pagerank import retrieval_via_pagerank
 from src.dataset.utils.k_hop import retrieval_via_k_hop
 from src.dataset.prompts.webqsp_template import PromptTemplates
@@ -79,7 +80,7 @@ def preprocess():
             continue
         graph = torch.load(f'{path_graphs}/{index}.pt', weights_only=False)
         q_emb = q_embs[index]
-        subg, desc = retrieval_via_pcst(graph, q_emb, nodes, edges, topk=3, topk_e=5, cost_e=0.5)
+        subg, desc = retrieval_via_pcst(graph, q_emb, nodes, edges, topk=3, topk_e=5, cost_e=0.5, prize_allocation=PrizeAllocation.LINEAR)
         torch.save(subg, f'{cached_graph}/{index}.pt')
         open(f'{cached_desc}/{index}.txt', 'w').write(desc)
 
