@@ -22,10 +22,26 @@ Our research systematically investigates the G-Retriever architecture. The core 
 - New Graph RAG Model Architecture: We propose a novel model architecture that integrates prompt tuning and G-Retriever with LoRA-based Large Language Model (LLM) fine-tuning. We then measure its performance using the WebQSP knowledge graph question answering dataset.
 
 
-
 ## :rocket: Setup
 
 ### 🌱  Create an environment and install dependencies
+
+Check out the Contributing guide to learn how to set up the environment, install dependencies, and get started contributing to this repository.
+
+### 🌱 Setting up env variables
+You can use `.env` file for set the following enviromental variables.
+```
+export ANTHROPIC_API_KEY=SET_YOUR_API_KEY_HERE
+export SERVER_CONFIG_FILE=config/server_config.yaml
+export LOCAL_CONFIG_FILE=config/local_config.yaml
+export LOG_CONFIG_FILE=config/log_config.yaml
+export RUN_LOCALLY=False
+export PORT=8001
+export ANTHROPIC_MODEL=claude-3-7-sonnet-20250219
+export MAX_TOKENS_MODEL=2024
+```
+
+
 
 ## ✅ How to Use
 
