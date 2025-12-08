@@ -23,9 +23,25 @@ Check out the **Managing dependencies** section of the Contributing guide to lea
 
 ### 🌱 Setting up env variables
 
-You can use `.env` file for set the following enviromental variables.
+You can use `.env` file for set the following enviromental variables. 
+Create account in [Hugging Face](https://huggingface.co/settings/tokens) and get your token from [here](https://huggingface.co/settings/tokens).
 ```
 export HF_TOKEN="SET_YOUR_KEY_HERE" # Hugging Face token
+```
+
+## :pushpin: Version tools
+
+The project was implemented with the following versions:
+- python: 3.12
+- cuda: 12.4 
+- torch: 2.6.0+cu124
+- torchvision: 0.21.0
+
+Run the following command to verify the versions:
+```
+nvidia-smi
+python -c "import torch; print(torch.__version__)"
+python -c "import torch; print(torch.version.cuda)"
 ```
 
 
@@ -84,8 +100,25 @@ We propose a novel model architecture that integrates prompt tuning and G-Retrie
 
 
 
-## :pushpin: Version tools
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## :pushpin: Version tools
 
 python: 3.12
 cuda: 12.4 (verify with nvidia-smi command)
@@ -131,9 +164,6 @@ nvidia-smi
 python -c "import torch; print(torch.__version__)"
 python -c "import torch; print(torch.version.cuda)"
 ```
-
-
-
 
 ## Data Preprocessing
 ```
