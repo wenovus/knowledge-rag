@@ -1,6 +1,6 @@
 # Chat with your Knowledge Graph
 
-## ⚡ Introduction
+## 🤖 Introduction
 
 This repository features a Graph RAG (Retrieval-Augmented Generation) project that allows users to query complex Knowledge Graphs using a natural language, conversational interface.
 
@@ -9,6 +9,8 @@ Designed for real-world, textual graphs, this flexible Question Answering framew
 - Scene Graph Understanding
 - Common Sense Reasoning
 - Advanced Knowledge Graph Reasoning
+
+## ⚡ Ablative Analysis
 
 Our research systematically investigates the G-Retriever architecture. The core focus is an ablation analysis to rigorously quantify how modifications to the system's components impact the overall effectiveness and performance of the Knowledge Graph conversational system.
 
@@ -20,11 +22,14 @@ Our research systematically investigates the G-Retriever architecture. The core 
 - New Graph RAG Model Architecture: We propose a novel model architecture that integrates prompt tuning and G-Retriever with LoRA-based Large Language Model (LLM) fine-tuning. We then measure its performance using the WebQSP knowledge graph question answering dataset.
 
 
+
 ## :rocket: Setup
 
 ### 🌱  Create an environment and install dependencies
 
 ## ✅ How to Use
+
+## 🔭 How run integration tests:
 
 
 This Repository contains the implementation of the ablative analysis for the paper "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering".
