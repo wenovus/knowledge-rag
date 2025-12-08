@@ -12,7 +12,7 @@ Designed for real-world, textual graphs, this flexible Question Answering framew
 
 ## ⚡ Ablative Analysis
 
-Our research systematically investigates the G-Retriever architecture. The core focus is an ablation analysis to rigorously quantify how modifications to the system's components impact the overall effectiveness and performance of the Knowledge Graph conversational system.
+Our research systematically investigates the G-Retriever architecture [![arXiv](https://img.shields.io/badge/arXiv-2402.07630-b31b1b.svg)](https://arxiv.org/abs/2402.07630). The core focus is an ablation analysis to rigorously quantify how modifications to the system's components impact the overall effectiveness and performance of the Knowledge Graph conversational system.
 
 
 - Varying Subgraph Retrieval Methods: We implemented two subgraph retrieval methods, K-hop and Personalized PageRank (PPR), and evaluated their performance using the ExplaGraphs and WebQSP datasets.
@@ -29,53 +29,64 @@ Our research systematically investigates the G-Retriever architecture. The core 
 Check out the Contributing guide to learn how to set up the environment, install dependencies, and get started contributing to this repository.
 
 ### 🌱 Setting up env variables
+
 You can use `.env` file for set the following enviromental variables.
 ```
-export ANTHROPIC_API_KEY=SET_YOUR_API_KEY_HERE
-export SERVER_CONFIG_FILE=config/server_config.yaml
-export LOCAL_CONFIG_FILE=config/local_config.yaml
-export LOG_CONFIG_FILE=config/log_config.yaml
-export RUN_LOCALLY=False
-export PORT=8001
-export ANTHROPIC_MODEL=claude-3-7-sonnet-20250219
-export MAX_TOKENS_MODEL=2024
+export HF_TOKEN="SET_YOUR_KEY_HERE"
+```
+
+
+## ✅ How to replicate the ablative analysis
+
+## 🔭 Data Preprocessing:
+```
+# expla_graphs
+python -m src.dataset.preprocess.expla_graphs
+python -m src.dataset.expla_graphs
+
+# scene_graphs
+python -m src.dataset.preprocess.scene_graphs
+python -m src.dataset.scene_graphs
+
+# webqsp
+python -m src.dataset.preprocess.webqsp
+python -m src.dataset.webqsp
+
+```
+
+
+## 🔭 Varying Subgraph Retrieval Methods:
+
+```
+
+```
+## 🔭 Varying Subgraph Encoder Type:
+
+```
+
+```
+## 🔭 Varying LLM Models:
+
+```
+
+```
+## 🔭 Prompt Tuning:
+
+```
+
+```
+## 🔭 New Graph RAG Model Architecture:
+
+```
+
 ```
 
 
 
-## ✅ How to Use
-
-## 🔭 How run integration tests:
-
-
-This Repository contains the implementation of the ablative analysis for the paper "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering".
 
 
 
-[![arXiv](https://img.shields.io/badge/arXiv-2402.07630-b31b1b.svg)](https://arxiv.org/abs/2402.07630)
 
-This repository contains the source code for the paper ["<u>G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering</u>"](https://arxiv.org/abs/2402.07630).
-
-We introduce **G-Retriever**, a flexible question-answering framework targeting real-world textual graphs, applicable to multiple applications including scene graph understanding, common sense reasoning, and knowledge graph reasoning.
-<img src="figs/chat.svg">
-
-**G-Retriever** integrates the strengths of Graph Neural Networks (GNNs), Large Language Models (LLMs), and Retrieval-Augmented Generation (RAG), and can be fine-tuned to enhance graph understanding via soft prompting.
-<img src="figs/overview.svg">
-
-## News
-[2024.09] [PyG 2.6](https://github.com/pyg-team/pytorch_geometric/releases/tag/2.6.0) now supports **G-Retriever**! 🎉 \[[Dataset](https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/datasets/web_qsp_dataset.html)\]\[[Model](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.GRetriever.html?highlight=gretriever)\]
-
-## Citation
-```
-@inproceedings{
-he2024gretriever,
-title={G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering},
-author={Xiaoxin He and Yijun Tian and Yifei Sun and Nitesh V Chawla and Thomas Laurent and Yann LeCun and Xavier Bresson and Bryan Hooi},
-booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
-year={2024},
-url={https://openreview.net/forum?id=MPJ3oXtTZl}
-}
-```
 ## Version tools
 
 python: 3.12
@@ -112,32 +123,6 @@ uv pip install -r pyproject.toml --group dev
 ```
 
 
-## Environment setup (ORIGINAL)
-```
-conda create --name g_retriever python=3.9 -y
-conda activate g_retriever
-
-# https://pytorch.org/get-started/locally/
-conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
-
-python -c "import torch; print(torch.__version__)"
-python -c "import torch; print(torch.version.cuda)"
-pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.1+cu118.html
-
-pip install peft
-pip install pandas
-pip install ogb
-pip install transformers
-pip install wandb
-pip install sentencepiece
-pip install torch_geometric
-pip install datasets
-pip install pcst_fast
-pip install gensim
-pip install scipy==1.12
-pip install protobuf
-```
-
 ## Commands for environment verification
 ```
 ldd --version
@@ -149,26 +134,8 @@ python -c "import torch; print(torch.__version__)"
 python -c "import torch; print(torch.version.cuda)"
 ```
 
-## Enviromental variables
-
-Create the file .env with these variables, setting your personal keys.
-
-```
-export HF_TOKEN="SET_YOUR_KEY_HERE"
-```
 
 
-
-## Download the Llama 2 Model
-1. Go to Hugging Face: https://huggingface.co/meta-llama/Llama-2-7b-hf. You will need to share your contact information with Meta to access this model.
-2. Sign up for a Hugging Face account (if you don’t already have one).
-3. Generate an access token: https://huggingface.co/docs/hub/en/security-tokens.
-4. Add your token to the code file as follows:
-  ```
-  From transformers import AutoModel
-  access_token = "hf_..."
-  model = AutoModel.from_pretrained("private/model", token=access_token)
-  ```
 
 
 
