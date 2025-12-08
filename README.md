@@ -12,7 +12,7 @@ Designed for real-world, textual graphs, this flexible Question Answering framew
 
 ## ⚡ Ablative Analysis
 
-Our research systematically investigates the G-Retriever architecture ([![arXiv](https://img.shields.io/badge/arXiv-2402.07630-b31b1b.svg)](https://arxiv.org/abs/2402.07630)). 
+Our research systematically investigates the G-Retriever architecture [![arXiv](https://img.shields.io/badge/arXiv-2402.07630-b31b1b.svg)](https://arxiv.org/abs/2402.07630). 
 The core focus is an ablation analysis to rigorously quantify how modifications to the system's components impact the overall effectiveness and performance of the Knowledge Graph conversational system. 
 
 
@@ -25,9 +25,15 @@ Check out the **Managing dependencies** section of the **Contributing** guide to
 ### 🌱 Setting up env variables
 
 You can use `.env` file for set the following enviromental variables. 
+
 Create account in [Hugging Face](https://huggingface.co/settings/tokens) and get your token from [here](https://huggingface.co/settings/tokens).
 ```
-export HF_TOKEN="SET_YOUR_KEY_HERE"
+export HF_TOKEN=<your_api_key>
+```
+Create account in  [W&B](https://wandb.ai/site) to track, visualize and manage the ablative analysis. To authenticate your machine with W&B, generate an API key from your user profile or at [here](https://wandb.ai/authorize).
+
+```
+export WANDB_API_KEY=<your_api_key>
 ```
 
 ## :pushpin: Version tools
