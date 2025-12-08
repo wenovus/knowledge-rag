@@ -101,3 +101,33 @@ def get_retrieval_func(retrieval_method: str, tele_mode: str = None, pcst: bool 
     else:
         raise ValueError(f"Unknown retrieval method: {retrieval_method}. Must be one of: 'pcst', 'k_hop', 'ppr'")
 
+
+def generate_extra_annotation(retrieval_method: str, tele_mode: str = None, pcst: bool = False, prize_allocation: str = None):
+    """
+    Generate the extra_annotation string for use in train.py and inference.py command-line arguments.
+    
+    Args:
+        retrieval_method: One of 'pcst', 'k_hop', or 'ppr'
+        tele_mode: Teleport mode for PPR retrieval. One of 'proportional', 'top_k'. Only used when retrieval_method='ppr'.
+        pcst: Whether to use PCST mode for PPR retrieval. Only used when retrieval_method='ppr'.
+        prize_allocation: Prize allocation mode. One of 'linear', 'equal', 'exponential'.
+                         Used when retrieval_method='pcst' or when retrieval_method='ppr' with tele_mode='top_k' or pcst=True.
+    
+    Returns:
+        A string that can be used as the --extra_annotation argument for train.py and inference.py
+    """
+    parts = [f"retrieval_{retrieval_method}"]
+    
+    if retrieval_method == 'ppr':
+        if tele_mode:
+            parts.append(f"tele_{tele_mode}")
+        if pcst:
+            parts.append("pcst")
+    
+    # Add prize_allocation if it's used
+    if retrieval_method == 'pcst' or (retrieval_method == 'ppr' and (tele_mode == 'top_k' or pcst)):
+        prize_alloc = prize_allocation or 'linear'
+        parts.append(f"prize_{prize_alloc}")
+    
+    return "_".join(parts)
+

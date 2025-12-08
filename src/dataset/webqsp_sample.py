@@ -106,6 +106,7 @@ def sample_dataset(dataset, sample_size: int, seed: int):
 
 if __name__ == '__main__':
     import argparse
+    from src.dataset.utils.retrieval_func_selector import generate_extra_annotation
 
     parser = argparse.ArgumentParser(description="Sample WebQSP dataset for training/inference.")
     parser.add_argument(
@@ -167,3 +168,23 @@ if __name__ == '__main__':
     split_ids = dataset.get_idx_split()
     for k, v in split_ids.items():
         print(f'# {k}: {len(v)}')
+    
+    # Generate and print the extra_annotation string for use in train.py and inference.py
+    extra_annotation = generate_extra_annotation(
+        args.retrieval_method,
+        args.tele_mode,
+        args.pcst,
+        args.prize_allocation
+    )
+    print(f"\n{'='*80}")
+    print("For bash/terminal, use the following:")
+    print(f'  extra_annotation="{extra_annotation}"')
+    print(f"\nThen use it in your commands:")
+    print(f'  python train.py --extra_annotation $extra_annotation')
+    print(f'  python inference.py --extra_annotation $extra_annotation')
+    print(f"\nFor Colab/Jupyter notebooks, use:")
+    print(f'  extra_annotation = "{extra_annotation}"')
+    print(f"\nThen use it in your commands:")
+    print(f'  !python train.py --extra_annotation {{{extra_annotation}}}')
+    print(f'  !python inference.py --extra_annotation {{{extra_annotation}}}')
+    print(f"{'='*80}")
