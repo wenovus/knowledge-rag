@@ -31,7 +31,10 @@ export HF_TOKEN="SET_YOUR_KEY_HERE"
 
 ## :pushpin: Version tools
 
-The project was developed and tested using the following key software versions:
+Testing and implementation of this project were conducted on a system featuring **dual A100 80GB GPUs**. To ensure reproducible results for the ablative analysis, this **hardware configuration must be utilized**.
+
+Key software versions used:
+
 - python: 3.12
 - cuda: 12.4 
 - torch: 2.6.0+cu124
