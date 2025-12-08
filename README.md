@@ -1,4 +1,27 @@
-# G-Retriever
+# Chat with your Knowledge Graph
+
+This repository features a Graph RAG (Retrieval-Augmented Generation) project that allows users to query complex Knowledge Graphs using a natural language, conversational interface.
+
+Designed for real-world, textual graphs, this flexible Question Answering framework is highly versatile and applicable across diverse domains, including:
+
+- Scene Graph Understanding
+- Common Sense Reasoning
+- Advanced Knowledge Graph Reasoning
+
+Our research systematically investigates the G-Retriever architecture. The core focus is an ablation analysis to rigorously quantify how modifications to the system's components impact the overall effectiveness and performance of the Knowledge Graph conversational system.
+
+
+- Varying Subgraph Retrieval Methods: We implemented two subgraph retrieval methods, K-hop and Personalized PageRank (PPR), and evaluated their performance using the ExplaGraphs and WebQSP datasets.
+- Varying Subgraph Encoder Type: We implemented two graph neural network (GNN) architectures for the G-retriever architecture, GraphSAGE and the Graph Isomorphism Network (GIN), and evaluated their performance using the ExplaGraphs and WebQSP benchmark datasets.
+- Varying LLM Models: We benchmarked a set of large language models (LLMs) with similar feature dimensions to Llama-2–7b-hf, including Gemma-7b, Mistral-7B-v0.1, Qwen-8B, and Deepseek-Coder-6.7b-base. Evaluation was performed using two representative datasets, ExplaGraphs and WebQSP, along with their respective LLM-instructed variants.
+- Prompt Tuning: We implemented a specific system prompt template and measured its effect on performance when applied to the WebQSP knowledge graph question answering dataset.
+- New Graph RAG Model Architecture: We propose a novel model architecture that integrates prompt tuning and G-Retriever with LoRA-based Large Language Model (LLM) fine-tuning. We then measure its performance using the WebQSP knowledge graph question answering dataset.
+
+
+
+This Repository contains the implementation of the ablative analysis for the paper "G-Retriever: Retrieval-Augmented Generation for Textual Graph Understanding and Question Answering".
+
+
 
 [![arXiv](https://img.shields.io/badge/arXiv-2402.07630-b31b1b.svg)](https://arxiv.org/abs/2402.07630)
 
