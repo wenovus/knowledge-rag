@@ -57,47 +57,60 @@ python -c "import torch; print(torch.version.cuda)"
 
 ## ✅ How to replicate the ablative analysis
 
-Each component of the ablative analysis is presented in its own dedicated section. For full reproducibility, we include a brief description of the experiment's goal, the specific command needed for execution, and a W&B link to access the live metrics, logs, and definitive results.
+Each component of the ablative analysis is presented in its own dedicated section. For full reproducibility, we include a **brief description of the experiment's goal**, the **specific command needed for execution**, and a **W&B link to access the live metrics, logs, and definitive results**.
 
 ## 🔭 Data Preprocessing:
 
 Prior to running the ablative analysis, the dataset requires preprocessing. This essential step includes textualizing the graph nodes and edges, embedding the questions, and then saving the resulting graphs in the PyTorch Geometric Data format. Finally, the dataset must be correctly split into train, validation, and test sets. Use the below commands to preprocess the datasets.
 
 ```
-# expla_graphs
+# ExplaGraphs
 python -m src.dataset.preprocess.expla_graphs
 python -m src.dataset.expla_graphs
 
-
-# scene_graphs
+# SceneGraphs
 python -m src.dataset.preprocess.scene_graphs
 
-# webqsp
+# WebQSP
 python -m src.dataset.preprocess.webqsp
 
 ```
 
 
 ## 🔭 Varying Subgraph Retrieval Methods: 
-We implemented two subgraph retrieval methods, K-hop and Personalized PageRank (PPR), and evaluated their performance using the ExplaGraphs and WebQSP datasets.
+We implemented two subgraph retrieval methods, K-hop and Personalized PageRank (PPR), and evaluated their performance using the SceneGraphs and WebQSP datasets.
 
 ```
-# expla_graphs
-python -m src.dataset.expla_graphs
+# SceneGraphs
+python -m src.dataset.scene_graphs --retrieval_method ppr
+python -m src.dataset.scene_graphs --retrieval_method ppr
 
-# scene_graphs
-python -m src.dataset.scene_graphs
-
-# webqsp
-python -m src.dataset.webqsp
+# WebQSP
+python -m src.dataset.webqsp --retrieval_method k-hop
+python -m src.dataset.webqsp --retrieval_method k-hop
 
 ```
 ## 🔭 Varying Subgraph Encoder Type:
 We implemented two graph neural network (GNN) architectures for the G-retriever architecture, GraphSAGE and the Graph Isomorphism Network (GIN), and evaluated their performance using the ExplaGraphs and WebQSP benchmark datasets.
 
 ```
+### GraphSAGE
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False  --gnn_model_name graphsage
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  --gnn_model_name graphsage
 
+### GIN
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False  --gnn_model_name gin
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  --gnn_model_name gin
 ```
+[GraphSAGE benchmarking for ExplaGraphs](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GraphSAGE-ExplaGraphs--VmlldzoxNTI0ODY2Nw?accessToken=t7s1tqhv0wru55i1jbp9dzatl2gdexjg80pupj0wa9qijvga7bwc3onmfsdeusba)
+
+[GraphSAGE benchmarking for WebQSP](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GraphSAGE-WebQSP--VmlldzoxNTI0ODk2OA?accessToken=rl84ivm79vt5cufdob8ajvne7ecrjpwlxardi18u8uzqc1ugo75uoccguuntbef9)
+
+[GIN benchmarking for ExplaGraphs](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GIN-ExplaGraphs--VmlldzoxNTI0ODY5MQ?accessToken=9i50yn52010qz3zwurlj9wjuhenucgy3gm1x1479xrrqpataq96rqbjtc2punoab)
+
+[GIN benchmarking for WebQSP](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GIN-WebQSP--VmlldzoxNTI1OTYwNg?accessToken=shf3cmrptkodzfsfskwpuv7au6vfz4n35n7e3l4w59y03982yu4xmfgqujgx05uq)
+
+
 ## 🔭 Varying LLM Models:
 We benchmarked a set of large language models (LLMs) with similar feature dimensions to Llama-2–7b-hf, including Gemma-7b, Mistral-7B-v0.1, Qwen-8B, and Deepseek-Coder-6.7b-base. Evaluation was performed using two representative datasets, ExplaGraphs and WebQSP, along with their respective LLM-instructed variants.
 
