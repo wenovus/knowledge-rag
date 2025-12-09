@@ -116,6 +116,37 @@ def get_accuracy_webqsp(path):
     return hit
 
 
+def list_indices(path):
+    """
+    Returns two lists: one for correct indices and one for incorrect indices for webqsp.
+    
+    Args:
+        path: Path to the results JSONL file
+        
+    Returns:
+        Tuple of (correct_indices, incorrect_indices) where each is a list of 0-based indices
+    """
+    df = pd.read_json(path, lines=True)
+    
+    correct_indices = []
+    incorrect_indices = []
+    
+    for idx, (prediction, answer) in enumerate(zip(df.pred.tolist(), df.label.tolist())):
+        prediction = prediction.replace("|", "\n")
+        answer = answer.split("|")
+        
+        prediction = prediction.split("\n")
+        prediction_str = " ".join(prediction)
+        hit = eval_hit(prediction_str, answer)
+        
+        if hit == 1:  # Correct prediction
+            correct_indices.append(idx)
+        else:  # Incorrect prediction
+            incorrect_indices.append(idx)
+    
+    return correct_indices, incorrect_indices
+
+
 eval_funcs = {
     "expla_graphs": get_accuracy_expla_graphs,
     "scene_graphs": get_accuracy_gqa,
