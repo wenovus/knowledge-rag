@@ -57,7 +57,7 @@ python -c "import torch; print(torch.version.cuda)"
 
 ## ✅ How to replicate the ablative analysis
 
-Each component of the ablative analysis is presented in its own dedicated section. For full reproducibility, we include a **brief description of the experiment's goal**, the **specific command needed for execution**, and a **W&B link to access the live metrics, logs, and definitive results**.
+Each component of the ablative analysis is presented in its own dedicated section. For full reproducibility, we include a brief **description of the experiment's goal**, the specific **command needed for execution**, and a **W&B link to access the live metrics, logs, and definitive results**.
 
 ## 🔭 Data Preprocessing:
 
@@ -103,11 +103,8 @@ python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False
 python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  --gnn_model_name gin
 ```
 [GraphSAGE benchmarking for ExplaGraphs](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GraphSAGE-ExplaGraphs--VmlldzoxNTI0ODY2Nw?accessToken=t7s1tqhv0wru55i1jbp9dzatl2gdexjg80pupj0wa9qijvga7bwc3onmfsdeusba)
-
 [GraphSAGE benchmarking for WebQSP](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GraphSAGE-WebQSP--VmlldzoxNTI0ODk2OA?accessToken=rl84ivm79vt5cufdob8ajvne7ecrjpwlxardi18u8uzqc1ugo75uoccguuntbef9)
-
 [GIN benchmarking for ExplaGraphs](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GIN-ExplaGraphs--VmlldzoxNTI0ODY5MQ?accessToken=9i50yn52010qz3zwurlj9wjuhenucgy3gm1x1479xrrqpataq96rqbjtc2punoab)
-
 [GIN benchmarking for WebQSP](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/GIN-WebQSP--VmlldzoxNTI1OTYwNg?accessToken=shf3cmrptkodzfsfskwpuv7au6vfz4n35n7e3l4w59y03982yu4xmfgqujgx05uq)
 
 
@@ -115,103 +112,56 @@ python train.py --dataset webqsp --model_name graph_llm --llm_frozen False  --gn
 We benchmarked a set of large language models (LLMs) with similar feature dimensions to Llama-2–7b-hf, including Gemma-7b, Mistral-7B-v0.1, Qwen-8B, and Deepseek-Coder-6.7b-base. Evaluation was performed using two representative datasets, ExplaGraphs and WebQSP, along with their respective LLM-instructed variants.
 
 ```
+## LLM model comparisons
+### Gemma
+#### a) inference only: Question-Only
+python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name gemma_7b_it --max_txt_len 0
+#### b) tuned llm: g-retriever + finetuning with lora
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False --llm_model_name gemma_7b
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False --llm_model_name gemma_7b
 
+### Mistral
+#### a) inference only: Question-Only
+python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name mistral_7b_it --max_txt_len 0
+#### b) tuned llm: g-retriever + finetuning with lora
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False --llm_model_name mistral_7b
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False --llm_model_name mistral_7b
+
+### Qwen
+#### a) inference only: Question-Only
+python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name qwen3_8b_it --max_txt_len 0
+#### b) tuned llm: g-retriever + finetuning with lora
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False --llm_model_name qwen3_8b
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False --llm_model_name qwen3_8b
+
+### DeepSeek
+#### a) inference only: Question-Only
+python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name deepseek6_7b_it --max_txt_len 0
+#### b) tuned llm: g-retriever + finetuning with lora
+python train.py --dataset expla_graphs --model_name graph_llm --llm_frozen False --llm_model_name deepseek6_7b
+python train.py --dataset webqsp --model_name graph_llm --llm_frozen False --llm_model_name deepseek6_7b
 ```
+[ExplaGraphs Inference only in Instructed LLMs](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/ExplaGraphs-LLMs-Inference-Only--VmlldzoxNTI3MzYwNA?accessToken=cf2k9lbvlaz8m7l7pm7j9vs3ku0f62chk94eotd2uy5j3ufqw82wg28uynyrnam8)
+[Diverse LLM Tuning: G-retriever + finetuning with Lora in ExplaGraphs](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/ExplaGraphs-LLMs-G-Retriever-Lora--VmlldzoxNTI3MzUwMw?accessToken=bge6arszopkqssgseocg4mpu74nkbs1tgw2pzwzyeohdgltm03qm1xo82hgy6inm)
+[Diverse LLM Tuning: G-retriever + finetuning with Lora in WebQSP](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/WebQSP-LLMs-G-Retriever-Lora--VmlldzoxNTI4MjIyMQ?accessToken=pizj2pshzwmc8q87xgdkqwawn1qn7ldmczewnwaxwyi80tu4jk6809v5q7t0cwmx)
+
 ## 🔭 Prompt Tuning:
 We implemented a specific system prompt template and measured its effect on performance when applied to the WebQSP knowledge graph question answering dataset.
 
 ```
+### LLM Prompt Templates
+#### frozen llm + prompt tuning: prompt tuning: Keeping the parameters of the LLM frozen and adapting only the prompt.
+python train.py --dataset webqsp --model_name pt_llm  
 
 ```
+[Prompt template tuning WebQSP with LLM frozen](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/WebQSP-Prompt-Template-Frozen-LLM-Prompt-Tuning---VmlldzoxNTI4NDgzMg?accessToken=qletj0g7494img4qg28sodj3ma59a82xblsq1z12tv22urgz8gev3nawfs1ahb6y)
+
 ## 🔭 New Graph RAG Model Architecture:
 We propose a novel model architecture that integrates prompt tuning and G-Retriever with LoRA-based Large Language Model (LLM) fine-tuning. We then measure its performance using the WebQSP knowledge graph question answering dataset.
 
 ```
-
+### New Graph RAG Model Architecture
+#### tuned llm: g-retriever + finetuning with lora + prompt tuning: Fine-tunning the LLM with LoRA and prompt tuning
+python train.py --dataset webqsp --model_name graph_llm_pt --llm_frozen False 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Data Preprocessing
-```
-# expla_graphs
-python -m src.dataset.preprocess.expla_graphs
-python -m src.dataset.expla_graphs
-
-# scene_graphs, might take
-python -m src.dataset.preprocess.scene_graphs
-python -m src.dataset.scene_graphs
-
-# webqsp
-python -m src.dataset.preprocess.webqsp
-python -m src.dataset.webqsp
-```
-
-## Training
-Replace path to the llm checkpoints in the `src/model/__init__.py`, then run
-
-### 1) Inference-Only LLM
-```
-python inference.py --dataset scene_graphs --model_name inference_llm --llm_model_name 7b_chat
-
-python inference.py --dataset expla_graphs --model_name inference_llm --llm_model_name 7b_chat
-
-
-```
-### 2) Frozen LLM + Prompt Tuning
-```
-# prompt tuning
-python train.py --dataset scene_graphs_baseline --model_name pt_llm
-
-python train.py --dataset expla_graphs --model_name pt_llm
-
-
-# G-Retriever
-python train.py --dataset scene_graphs --model_name graph_llm
-```
-
-### 3) Tuned LLM
-```
-# finetune LLM with LoRA
-python train.py --dataset scene_graphs_baseline --model_name llm --llm_frozen False
-
-# G-Retriever with LoRA
-python train.py --dataset scene_graphs --model_name graph_llm --llm_frozen False
-```
-
-## Reproducibility
-Use `run.sh` to run the codes and reproduce the published results in the main table.
-
-
-## Samples retrieval graphs 
-
-python -m src.dataset.preprocess.scene_graphs_sample
-python -m src.dataset.scene_graphs_sample
-
-python -m src.dataset.preprocess.webqsp_sample
-python -m src.dataset.webqsp_sample
-
-python -m src.dataset.preprocess.expla_graphs
-python -m src.dataset.expla_graphs
+[GraphLLMPromptTuning model using WebQSP](https://wandb.ai/florenciopaucar-uni/project_g_retriever/reports/WebQSP-Prompt-Tuning-G-Retriever-LLM-LoRA--VmlldzoxNTI4NTM4NQ?accessToken=y16u59kzx8o5335rwzjqsjfr6bb7zfstfc044w8m8vxeaiai7q4ms3krft1jp3u9)
