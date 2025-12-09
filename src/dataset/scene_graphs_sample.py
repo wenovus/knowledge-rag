@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset
-from src.dataset.utils.retrieval import retrieval_via_pcst
+from src.dataset.utils.retrieval_with_prize_allocation import retrieval_via_pcst
 from src.dataset.utils.k_hop import retrieval_via_k_hop
 from src.dataset.utils.personalized_pagerank import retrieval_via_pagerank
 from src.dataset.utils.retrieval_func_selector import TeleportMode

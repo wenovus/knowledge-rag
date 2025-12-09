@@ -43,7 +43,7 @@ def get_retrieval_func(retrieval_method: str, tele_mode: str = None, pcst: bool 
             raise ValueError(f"tele_mode must be None when retrieval_method='pcst', but got: {tele_mode}")
     
     if retrieval_method == 'pcst':
-        from src.dataset.utils.retrieval import retrieval_via_pcst_fn
+        from src.dataset.utils.retrieval_with_prize_allocation import retrieval_via_pcst_fn
         
         # Map string to enum for prize_allocation
         if prize_allocation is None:

@@ -4,6 +4,9 @@ import pandas as pd
 from torch.utils.data import Dataset
 import datasets
 from tqdm import tqdm
+from src.dataset.utils.retrieval import retrieval_via_pcst
+from src.dataset.utils.personalized_pagerank import retrieval_via_pagerank
+from src.dataset.utils.k_hop import retrieval_via_k_hop
 from src.dataset.prompts.webqsp_template import PromptTemplates
 
 model_name = 'sbert'
@@ -58,15 +61,11 @@ class WebQSPDataset(Dataset):
         return {'train': train_indices, 'val': val_indices, 'test': test_indices}
 
 
-def preprocess(retrieval_method: str, tele_mode: str = None, pcst: bool = False, prize_allocation: str = None):
+def preprocess():
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
     dataset = datasets.concatenate_datasets([dataset['train'], dataset['validation'], dataset['test']])
-
-    # Get the appropriate retrieval function
-    from src.dataset.utils.retrieval_func_selector import get_retrieval_func
-    retrieval_func = get_retrieval_func(retrieval_method, tele_mode, pcst, prize_allocation)
 
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(dataset))):
@@ -80,52 +79,14 @@ def preprocess(retrieval_method: str, tele_mode: str = None, pcst: bool = False,
             continue
         graph = torch.load(f'{path_graphs}/{index}.pt', weights_only=False)
         q_emb = q_embs[index]
-        subg, desc = retrieval_func(graph, q_emb, nodes, edges, topk=3, topk_e=5, cost_e=0.5)
+        subg, desc = retrieval_via_pcst(graph, q_emb, nodes, edges, topk=3, topk_e=5, cost_e=0.5)
         torch.save(subg, f'{cached_graph}/{index}.pt')
         open(f'{cached_desc}/{index}.txt', 'w').write(desc)
 
 
 if __name__ == '__main__':
-    import argparse
-    from src.dataset.utils.retrieval_func_selector import generate_extra_annotation
 
-    parser = argparse.ArgumentParser(description="Preprocess WebQSP dataset for training/inference.")
-    parser.add_argument(
-        "--retrieval_method",
-        type=str,
-        default="pcst",
-        choices=["pcst", "k_hop", "ppr"],
-        help="Retrieval method to use for subgraph extraction. Options: 'pcst', 'k_hop', 'ppr'.",
-    )
-    parser.add_argument(
-        "--tele_mode",
-        type=str,
-        default="proportional",
-        choices=["proportional", "top_k"],
-        help="Teleport mode for PPR retrieval. Only used when retrieval_method='ppr'. Options: 'proportional', 'top_k'. Default: 'proportional'.",
-    )
-    parser.add_argument(
-        "--pcst",
-        action="store_true",
-        help="Use PCST mode for PPR retrieval. Only used when retrieval_method='ppr'. Default: False.",
-    )
-    parser.add_argument(
-        "--prize_allocation",
-        type=str,
-        default="linear",
-        choices=["linear", "equal", "exponential"],
-        help="Prize allocation mode. Used when retrieval_method='pcst' or when retrieval_method='ppr' with tele_mode='top_k' or when retrieval_method='ppr' with pcst=True. Options: 'linear', 'equal', 'exponential'. Default: 'linear'.",
-    )
-    args = parser.parse_args()
-
-    print(f"using retrieval method: {args.retrieval_method}")
-    if args.retrieval_method == 'ppr':
-        print(f"using tele_mode: {args.tele_mode}")
-        print(f"using pcst: {args.pcst}")
-    if args.retrieval_method == 'pcst' or (args.retrieval_method == 'ppr' and (args.tele_mode == 'top_k' or args.pcst)):
-        print(f"using prize_allocation: {args.prize_allocation or 'linear (default)'}")
-
-    preprocess(args.retrieval_method, args.tele_mode, args.pcst, args.prize_allocation)
+    preprocess()
 
     dataset = WebQSPDataset()
 
@@ -136,23 +97,3 @@ if __name__ == '__main__':
     split_ids = dataset.get_idx_split()
     for k, v in split_ids.items():
         print(f'# {k}: {len(v)}')
-    
-    # Generate and print the extra_annotation string for use in train.py and inference.py
-    extra_annotation = generate_extra_annotation(
-        args.retrieval_method,
-        args.tele_mode,
-        args.pcst,
-        args.prize_allocation
-    )
-    print(f"\n{'='*80}")
-    print("For bash/terminal, use the following:")
-    print(f'  extra_annotation="{extra_annotation}"')
-    print(f"\nThen use it in your commands:")
-    print(f'  python train.py --extra_annotation $extra_annotation')
-    print(f'  python inference.py --extra_annotation $extra_annotation')
-    print(f"\nFor Colab/Jupyter notebooks, use:")
-    print(f'  extra_annotation = "{extra_annotation}"')
-    print(f"\nThen use it in your commands:")
-    print(f'  !python train.py --extra_annotation {{{extra_annotation}}}')
-    print(f'  !python inference.py --extra_annotation {{{extra_annotation}}}')
-    print(f"{'='*80}")
