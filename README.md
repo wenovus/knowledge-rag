@@ -57,7 +57,7 @@ python -c "import torch; print(torch.version.cuda)"
 
 ## ✅ How to replicate the ablative analysis
 
-The ablative analysis is presented section-by-section. For each analysis, we provide a concise overview of its focus, followed by the specific command-line instruction necessary to successfully replicate the experiment and a link in Weights&Biases to its results.
+Each component of the ablative analysis is presented in its own dedicated section. For full reproducibility, we include a brief description of the experiment's goal, the specific command needed for execution, and a W&B link to access the live metrics, logs, and definitive results.
 
 ## 🔭 Data Preprocessing:
 
