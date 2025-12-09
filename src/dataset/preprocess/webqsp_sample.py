@@ -108,9 +108,9 @@ def step_two(sample_size: int, seed: int):
 
 def sample_dataset(dataset, sample_size: int, seed: int):
     np.random.seed(seed)
-    train_size = min(sample_size * 2.4, len(dataset['train']))
-    val_size = min(sample_size * 0.8, len(dataset['validation']))
-    test_size = min(sample_size * 0.8, len(dataset['test']))
+    train_size = min(int(sample_size * 2.4), len(dataset['train']))
+    val_size = min(int(sample_size * 0.8), len(dataset['validation']))
+    test_size = min(int(sample_size * 0.8), len(dataset['test']))
 
     train_indices = np.random.choice(len(dataset['train']), size=train_size, replace=False)
     val_indices = np.random.choice(len(dataset['validation']), size=val_size, replace=False)
