@@ -59,21 +59,15 @@ class WebQSPDataset(Dataset):
         return {'train': train_indices, 'val': val_indices, 'test': test_indices}
 
 
-def preprocess(sample_size: int, seed: int, retrieval_method: str):
+def preprocess(sample_size: int, seed: int, retrieval_method: str, tele_mode: str = None, pcst: bool = False, prize_allocation: str = None):
     os.makedirs(cached_desc, exist_ok=True)
     os.makedirs(cached_graph, exist_ok=True)
     dataset = datasets.load_dataset("rmanluo/RoG-webqsp")
     dataset, len_train, len_val, len_test, train_sample, val_sample, test_sample = sample_dataset(dataset, sample_size, seed)
 
-    # Import the appropriate retrieval function based on method
-    if retrieval_method == 'pcst':
-        from src.dataset.utils.retrieval import retrieval_via_pcst as retrieval_func
-    elif retrieval_method == 'k_hop':
-        from src.dataset.utils.k_hop import retrieval_via_k_hop as retrieval_func
-    elif retrieval_method == 'ppr':
-        from src.dataset.utils.personalized_pagerank import retrieval_via_pagerank as retrieval_func
-    else:
-        raise ValueError(f"Unknown retrieval method: {retrieval_method}. Must be one of: 'pcst', 'k_hop', 'ppr'")
+    # Get the appropriate retrieval function
+    from src.dataset.utils.retrieval_func_selector import get_retrieval_func
+    retrieval_func = get_retrieval_func(retrieval_method, tele_mode, pcst, prize_allocation)
 
     q_embs = torch.load(f'{path}/q_embs.pt')
     for index in tqdm(range(len(dataset))):
@@ -93,9 +87,9 @@ def preprocess(sample_size: int, seed: int, retrieval_method: str):
 
 def sample_dataset(dataset, sample_size: int, seed: int):
     np.random.seed(seed)
-    train_size = min(sample_size, len(dataset['train']))
-    val_size = min(sample_size, len(dataset['validation']))
-    test_size = min(sample_size, len(dataset['test']))
+    train_size = min(int(sample_size * 2.4), len(dataset['train']))
+    val_size = min(int(sample_size * 0.8), len(dataset['validation']))
+    test_size = min(int(sample_size * 0.8), len(dataset['test']))
 
     train_indices = np.random.choice(len(dataset['train']), size=train_size, replace=False)
     val_indices = np.random.choice(len(dataset['validation']), size=val_size, replace=False)
@@ -112,6 +106,7 @@ def sample_dataset(dataset, sample_size: int, seed: int):
 
 if __name__ == '__main__':
     import argparse
+    from src.dataset.utils.retrieval_func_selector import generate_extra_annotation
 
     parser = argparse.ArgumentParser(description="Sample WebQSP dataset for training/inference.")
     parser.add_argument(
@@ -123,7 +118,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--seed",
         type=int,
-        default=0,
+        default=42,
         help="Random seed for numpy sampling. Must match preprocessing script.",
     )
     parser.add_argument(
@@ -133,12 +128,36 @@ if __name__ == '__main__':
         choices=["pcst", "k_hop", "ppr"],
         help="Retrieval method to use for subgraph extraction. Options: 'pcst', 'k_hop', 'ppr'.",
     )
+    parser.add_argument(
+        "--tele_mode",
+        type=str,
+        default=None,
+        choices=["proportional", "top_k"],
+        help="Teleport mode for PPR retrieval. Only used when retrieval_method='ppr'. Options: 'proportional', 'top_k'.",
+    )
+    parser.add_argument(
+        "--pcst",
+        action="store_true",
+        help="Use PCST mode for PPR retrieval. Only used when retrieval_method='ppr'.",
+    )
+    parser.add_argument(
+        "--prize_allocation",
+        type=str,
+        default=None,
+        choices=["linear", "equal", "exponential"],
+        help="Prize allocation mode. Used when retrieval_method='pcst' or when retrieval_method='ppr' with tele_mode='top_k' or when retrieval_method='ppr' with pcst=True. Options: 'linear', 'equal', 'exponential'. Defaults to 'linear' if not specified.",
+    )
     args = parser.parse_args()
 
     print(f"taking {args.sample_size} samples from each split")
     print(f"using seed {args.seed}")
     print(f"using retrieval method: {args.retrieval_method}")
-    preprocess(args.sample_size, args.seed, args.retrieval_method)
+    if args.retrieval_method == 'ppr':
+        print(f"using tele_mode: {args.tele_mode}")
+        print(f"using pcst: {args.pcst}")
+    if args.retrieval_method == 'pcst' or (args.retrieval_method == 'ppr' and (args.tele_mode == 'top_k' or args.pcst)):
+        print(f"using prize_allocation: {args.prize_allocation or 'linear (default)'}")
+    preprocess(args.sample_size, args.seed, args.retrieval_method, args.tele_mode, args.pcst, args.prize_allocation)
 
     dataset = WebQSPDataset(args.sample_size, args.seed)
 
@@ -149,3 +168,23 @@ if __name__ == '__main__':
     split_ids = dataset.get_idx_split()
     for k, v in split_ids.items():
         print(f'# {k}: {len(v)}')
+    
+    # Generate and print the extra_annotation string for use in train.py and inference.py
+    extra_annotation = generate_extra_annotation(
+        args.retrieval_method,
+        args.tele_mode,
+        args.pcst,
+        args.prize_allocation
+    )
+    print(f"\n{'='*80}")
+    print("For bash/terminal, use the following:")
+    print(f'  extra_annotation="{extra_annotation}"')
+    print(f"\nThen use it in your commands:")
+    print(f'  python train.py --extra_annotation $extra_annotation')
+    print(f'  python inference.py --extra_annotation $extra_annotation')
+    print(f"\nFor Colab/Jupyter notebooks, use:")
+    print(f'  extra_annotation = "{extra_annotation}"')
+    print(f"\nThen use it in your commands:")
+    print(f'  !python train.py --extra_annotation {{{extra_annotation}}}')
+    print(f'  !python inference.py --extra_annotation {{{extra_annotation}}}')
+    print(f"{'='*80}")

@@ -3,9 +3,10 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset
-from src.dataset.utils.retrieval import retrieval_via_pcst
+from src.dataset.utils.retrieval_with_prize_allocation import retrieval_via_pcst
 from src.dataset.utils.k_hop import retrieval_via_k_hop
 from src.dataset.utils.personalized_pagerank import retrieval_via_pagerank
+from src.dataset.utils.retrieval_func_selector import TeleportMode
 
 
 model_name = 'sbert'
@@ -74,7 +75,7 @@ def preprocess():
         graph = torch.load(f'{path_graphs}/{image_id}.pt', weights_only=False)
         nodes = pd.read_csv(f'{path_nodes}/{image_id}.csv')
         edges = pd.read_csv(f'{path_edges}/{image_id}.csv')
-        subg, desc = retrieval_via_pagerank(graph, q_embs[index], nodes, edges, topk=3, topk_e=3, cost_e=0.5)
+        subg, desc = retrieval_via_pagerank(graph, q_embs[index], nodes, edges, topk=3, topk_e=3, cost_e=0.5, pcst=False, tele_mode=TeleportMode.PROPORTIONAL, prize_allocation=None)
         torch.save(subg, f'{cached_graph}/{index}.pt')
         open(f'{cached_desc}/{index}.txt', 'w').write(desc)
 
