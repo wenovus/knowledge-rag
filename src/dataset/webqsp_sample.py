@@ -88,9 +88,9 @@ def preprocess(sample_size: int, seed: int, retrieval_method: str, tele_mode: st
 
 def sample_dataset(dataset, sample_size: int, seed: int):
     np.random.seed(seed)
-    train_size = min(int(sample_size * 5), len(dataset['train']))
-    val_size = min(int(sample_size * 3), len(dataset['validation']))
-    test_size = min(int(sample_size * 4), len(dataset['test']))
+    train_size = min(1, int(sample_size / 12 * 5), len(dataset['train']))
+    val_size = min(1, int(sample_size / 12 * 3), len(dataset['validation']))
+    test_size = min(1, int(sample_size / 12 * 4), len(dataset['test']))
 
     train_indices = np.random.choice(len(dataset['train']), size=train_size, replace=False)
     val_indices = np.random.choice(len(dataset['validation']), size=val_size, replace=False)
@@ -113,8 +113,8 @@ if __name__ == '__main__':
     parser.add_argument(
         "--sample_size",
         type=int,
-        default=50,
-        help="Number of examples to sample from each split (train/val/test). Must match preprocessing script.",
+        default=600,
+        help="Number of total samples to sample from the dataset. Must match preprocessing script.",
     )
     parser.add_argument(
         "--seed",
